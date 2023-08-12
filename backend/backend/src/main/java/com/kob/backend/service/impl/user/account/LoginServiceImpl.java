@@ -1,6 +1,6 @@
 package com.kob.backend.service.impl.user.account;
 
-import com.kob.backend.pojo.User;
+import com.kob.backend.mapper.pojo.User;
 import com.kob.backend.service.impl.utils.UserDetailsImpl;
 import com.kob.backend.service.user.account.LoginService;
 import com.kob.backend.utils.JwtUtil;

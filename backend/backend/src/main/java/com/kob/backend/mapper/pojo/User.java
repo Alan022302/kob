@@ -1,4 +1,4 @@
-package com.kob.backend.pojo;
+package com.kob.backend.mapper.pojo;
 
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
