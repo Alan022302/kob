@@ -3,8 +3,10 @@ package com.kob.backend.consumer;
 import com.alibaba.fastjson.JSONObject;
 import com.kob.backend.consumer.utils.Game;
 import com.kob.backend.consumer.utils.JwtAuthentication;
+import com.kob.backend.mapper.BotMapper;
 import com.kob.backend.mapper.RecordMapper;
 import com.kob.backend.mapper.UserMapper;
+import com.kob.backend.mapper.pojo.Bot;
 import com.kob.backend.mapper.pojo.User;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -16,36 +18,36 @@ import javax.websocket.*;
 import javax.websocket.server.PathParam;
 import javax.websocket.server.ServerEndpoint;
 import java.io.IOException;
-import java.util.Iterator;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.CopyOnWriteArrayList;
 
 @Component
 @ServerEndpoint("/websocket/{token}")  // 注意不要以'/'结尾
 public class WebSocketServer {
-    public final static ConcurrentHashMap<Integer, WebSocketServer> users = new ConcurrentHashMap<>();
 
+    final public static ConcurrentHashMap<Integer, WebSocketServer> users = new ConcurrentHashMap<>();
     private User user;
-
     private Session session = null;
 
     private static UserMapper userMapper;
     public static RecordMapper recordMapper;
-    private static RestTemplate restTemplate;
-    private Game game = null;
+    private static BotMapper botMapper;
+    public static RestTemplate restTemplate;
+    public Game game = null;
     private final static String addPlayerUrl = "http://127.0.0.1:3001/player/add/";
-    private final static String removePlayerUrl = "http://127.0.0.1:3001/player/remove/";
+    private final static String removePlayerurl = "http://127.0.0.1:3001/player/remove/";
 
     @Autowired
     public void setUserMapper(UserMapper userMapper) {
         WebSocketServer.userMapper = userMapper;
     }
-
     @Autowired
     public void setRecordMapper(RecordMapper recordMapper) {
         WebSocketServer.recordMapper = recordMapper;
     }
-
+    @Autowired
+    public void setBotMapper(BotMapper botMapper) {
+        WebSocketServer.botMapper = botMapper;
+    }
     @Autowired
     public void setRestTemplate(RestTemplate restTemplate) {
         WebSocketServer.restTemplate = restTemplate;
@@ -54,13 +56,12 @@ public class WebSocketServer {
     @OnOpen
     public void onOpen(Session session, @PathParam("token") String token) throws IOException {
         this.session = session;
-        // 建立连接
+        System.out.println("connected!");
         Integer userId = JwtAuthentication.getUserId(token);
         this.user = userMapper.selectById(userId);
 
         if (this.user != null) {
             users.put(userId, this);
-            System.out.println("connected!");
         } else {
             this.session.close();
         }
@@ -70,17 +71,25 @@ public class WebSocketServer {
 
     @OnClose
     public void onClose() {
-        // 关闭链接
+        System.out.println("disconnected!");
         if (this.user != null) {
             users.remove(this.user.getId());
         }
-        System.out.println("disconnected!");
     }
 
-    public static void startGame(Integer aId, Integer bId) {
+    public static void startGame(Integer aId, Integer aBotId, Integer bId, Integer bBotId) {
         User a = userMapper.selectById(aId), b = userMapper.selectById(bId);
+        Bot botA = botMapper.selectById(aBotId), botB = botMapper.selectById(bBotId);
 
-        Game game = new Game(13, 14, 20, a.getId(), b.getId());
+        Game game = new Game(
+                13,
+                14,
+                20,
+                a.getId(),
+                botA,
+                b.getId(),
+                botB
+        );
         game.createMap();
         if (users.get(a.getId()) != null)
             users.get(a.getId()).game = game;
@@ -115,11 +124,12 @@ public class WebSocketServer {
             users.get(b.getId()).sendMessage(respB.toJSONString());
     }
 
-    private void startMatching() {
-        System.out.println("start matching");
+    private void startMatching(Integer botId) {
+        System.out.println("start matching!");
         MultiValueMap<String, String> data = new LinkedMultiValueMap<>();
         data.add("user_id", this.user.getId().toString());
         data.add("rating", this.user.getRating().toString());
+        data.add("bot_id", botId.toString());
         restTemplate.postForObject(addPlayerUrl, data, String.class);
     }
 
@@ -127,26 +137,26 @@ public class WebSocketServer {
         System.out.println("stop matching");
         MultiValueMap<String, String> data = new LinkedMultiValueMap<>();
         data.add("user_id", this.user.getId().toString());
-        restTemplate.postForObject(removePlayerUrl, data, String.class);
+        restTemplate.postForObject(removePlayerurl, data, String.class);
     }
 
     private void move(int direction) {
         if (game.getPlayerA().getId().equals(user.getId())) {
-            game.setNextStepA(direction);
+            if (game.getPlayerA().getBotId().equals(-1))  // 亲自出马
+                game.setNextStepA(direction);
         } else if (game.getPlayerB().getId().equals(user.getId())) {
-            game.setNextStepB(direction);
+            if (game.getPlayerB().getBotId().equals(-1))  // 亲自出马
+                game.setNextStepB(direction);
         }
     }
 
     @OnMessage
-    public void onMessage(String message, Session session) {
-        // 从Client接收消息
+    public void onMessage(String message, Session session) {  // 当做路由
         System.out.println("receive message!");
         JSONObject data = JSONObject.parseObject(message);
         String event = data.getString("event");
-
         if ("start-matching".equals(event)) {
-            startMatching();
+            startMatching(data.getInteger("bot_id"));
         } else if ("stop-matching".equals(event)) {
             stopMatching();
         } else if ("move".equals(event)) {
