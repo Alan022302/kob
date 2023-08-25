@@ -38,7 +38,7 @@
                                         <VAceEditor
                                             v-model:value="botadd.content"
                                             @init="editorInit"
-                                            lang="c_cpp"
+                                            lang="JAVA"
                                             theme="textmate"
                                             style="height: 300px" />
                                     </div>
