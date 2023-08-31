@@ -74,6 +74,10 @@ public class WebSocketServer {
         System.out.println("disconnected!");
         if (this.user != null) {
             users.remove(this.user.getId());
+
+            MultiValueMap<String, String> data = new LinkedMultiValueMap<>();
+            data.add("user_id", this.user.getId().toString());
+            restTemplate.postForObject(removePlayerurl, data, String.class);
         }
     }
 

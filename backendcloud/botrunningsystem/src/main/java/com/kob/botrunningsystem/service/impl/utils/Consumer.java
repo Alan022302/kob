@@ -30,7 +30,7 @@ public class Consumer extends Thread {
         } catch (InterruptedException e) {
             e.printStackTrace();
         } finally {
-            this.interrupt();  // 终端当前线程
+            this.interrupt();  //  中断当前线程
         }
     }
 
