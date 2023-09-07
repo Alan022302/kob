@@ -22,8 +22,8 @@ import java.util.Random;
 
 @Service
 public class WebServiceImpl implements WebService {
-    private static final String appId = "102067640";
-    private static final String appSecret = "lTyGKH5f2IRN6f8U";
+    private static final String appId = "********";
+    private static final String appSecret = "*********";
     private static final String redirectUrl = "https://app5878.acapp.acwing.com.cn/user/account/qq/receive_code";
     private static final String applyAccessTokenUrl = "https://graph.qq.com/oauth2.0/token";
     private static final String getUserInfoUrl = "https://graph.qq.com/user/get_user_info";
