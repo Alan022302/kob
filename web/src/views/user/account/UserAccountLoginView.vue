@@ -14,6 +14,12 @@
                     <div class="error-message">{{ message }}</div>
                     <button type="submit" class="btn btn-primary">提交</button>
                 </form>
+                <hr class="divider">
+                <p class="divider-text">其他方式登录</p>
+                <div style="text-align: center; margin-top: 20px; cursor: pointer;" @click="qq_login">
+                    <img height="50" src="https://wiki.connect.qq.com/wp-content/uploads/2013/10/03_qq_symbol-1-768x921.png" alt="">
+                    <p class="qq-text">QQ账号登录</p>
+                </div>
             </div>
         </div>
     </ContentField>
@@ -24,6 +30,7 @@ import ContentField from '../../../components/ContentField.vue'
 import { useStore } from 'vuex'
 import { ref } from 'vue'
 import router from '../../../router/index'
+import $ from 'jquery'
 
 export default {
     components: {
@@ -70,11 +77,25 @@ export default {
             })
         }
 
+        const qq_login = () => {
+            $.ajax({
+                url: "https://app5878.acapp.acwing.com.cn/api/user/account/qq/apply_code/",
+                type: "GET",
+                success: resp => {
+                    if (resp.result === "success") {
+                        window.location.replace(resp.apply_code_url);
+                    }
+                }
+            })
+        }
+
+
         return {
             username,
             password,
             message,
             login,
+            qq_login,
         }
     }
 }
@@ -86,5 +107,21 @@ button {
 }
 div.error-message {
     color: red;
+}
+hr.divider {
+    margin-top: 50px;
+    margin-bottom: 5px;
+}
+p.divider-text {
+    margin-top: 0px;
+    margin-bottom: 20px;
+    text-align: center;
+    font-size: 15px;
+    color: gray;
+}
+p.qq-text {
+    margin-top: 0px;
+    font-size: 15px;
+    font-weight: 600;
 }
 </style>

@@ -7,6 +7,7 @@ import UserBotIndexView from '../views/user/bot/UserBotIndexView'
 import NotFound from '../views/error/NotFound'
 import UserAccountLoginView from '../views/user/account/UserAccountLoginView'
 import UserAccountRegisterView from '../views/user/account/UserAccountRegisterView'
+import UserAccountQQReceiveCodeView from '../views/user/account/UserAccountQQReceiveCodeView'
 import store from "../store/index"
 
 const routes = [
@@ -70,6 +71,14 @@ const routes = [
     path: "/user/account/register/",
     name: "user_account_register",
     component: UserAccountRegisterView,
+    meta: {
+      requestAuth: false,
+    }
+  },
+  {
+    path: "/user/account/qq/receive_code/",
+    name: "user_account_qq_receive_code",
+    component: UserAccountQQReceiveCodeView,
     meta: {
       requestAuth: false,
     }
